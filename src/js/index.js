@@ -1,70 +1,61 @@
-const BASE_URL = 'https://pixabay.com/api/';
-const API_KEY = '31781224-f2235db9c919ebb7ef96866ff';
+import { fetchImages } from './api';
+import { showEl, hideEl } from './helpers';
+import { createMarkup } from './createMarkup';
 
 const searchForm = document.querySelector('.search-form');
 const gallery = document.querySelector('.gallery');
+const loadMoreBtn = document.querySelector('.load-more');
+const infoMsg = document.querySelector('.info-msg');
+
+const PER_PAGE = 40;
+let currentQuery = null;
+let page = 1;
 
 searchForm.addEventListener('submit', onSearchSubmit);
+loadMoreBtn.addEventListener('click', onLoadMoreBtnClick);
+
+function onLoadMoreBtnClick() {
+  fetchImages(currentQuery, page, PER_PAGE)
+    .then(data => {
+      page += 1;
+      if (data.totalHits < page * PER_PAGE) {
+        hideEl(loadMoreBtn);
+        showEl(infoMsg);
+      }
+      gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
+    })
+    .catch(err => console.error(err));
+}
 
 function onSearchSubmit(evt) {
+  currentQuery = '';
+  page = 1;
   evt.preventDefault();
+  hideEl(loadMoreBtn);
+  hideEl(infoMsg);
 
   const {
     searchQuery: { value: query },
   } = evt.currentTarget.elements;
 
-  fetchImages(query).then(data => {
-    evt.target.reset();
-    gallery.innerHTML = '';
-    if (!data.total) {
-      alert(
-        'Sorry, there are no images matching your search query. Please try again.'
-      );
-      return;
-    }
-    gallery.innerHTML = createMarkup(data.hits);
-  });
-}
+  fetchImages(query, page, PER_PAGE)
+    .then(data => {
+      page += 1;
 
-function createMarkup(arr) {
-  return arr
-    .map(
-      ({
-        webformatURL,
-        largeImageURL,
-        tags,
-        likes,
-        views,
-        comments,
-        downloads,
-      }) => `<div class="photo-card">
-        <img src="${webformatURL}" alt="${tags}" loading="lazy" width="300"/>
-        <div class="info">
-          <p class="info-item">
-            <b>Likes ${likes}</b>
-          </p>
-          <p class="info-item">
-            <b>Views ${views}</b>
-          </p>
-          <p class="info-item">
-            <b>Comments ${comments}</b>
-          </p>
-          <p class="info-item">
-            <b>Downloads ${downloads}</b>
-          </p>
-        </div>
-      </div>`
-    )
-    .join('');
-}
-
-function fetchImages(query) {
-  return fetch(
-    `${BASE_URL}?key=${API_KEY}&q=${query}&image_type =photo&orientation=horizontal&safesearch=true`
-  ).then(resp => {
-    if (!resp.ok) {
-      throw new Error(resp.statusText);
-    }
-    return resp.json();
-  });
+      evt.target.reset();
+      currentQuery = query;
+      showEl(loadMoreBtn);
+      gallery.innerHTML = '';
+      if (!data.total) {
+        throw new Error(
+          'Sorry, there are no images matching your search query. Please try again.'
+        );
+        return;
+      }
+      gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
+    })
+    .catch(err => {
+      console.error(err);
+      hideEl(loadMoreBtn);
+    });
 }
