@@ -1,3 +1,8 @@
+import { Notify } from 'notiflix';
+
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
+
 import { fetchImages } from './api';
 import { showEl, hideEl } from './helpers';
 import { createMarkup } from './createMarkup';
@@ -6,6 +11,8 @@ const searchForm = document.querySelector('.search-form');
 const gallery = document.querySelector('.gallery');
 const loadMoreBtn = document.querySelector('.load-more');
 const infoMsg = document.querySelector('.info-msg');
+
+const lightbox = new SimpleLightbox('.gallery a');
 
 const PER_PAGE = 40;
 let currentQuery = null;
@@ -23,12 +30,12 @@ function onLoadMoreBtnClick() {
         showEl(infoMsg);
       }
       gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
+      lightbox.refresh();
     })
     .catch(err => console.error(err));
 }
 
 function onSearchSubmit(evt) {
-  currentQuery = '';
   page = 1;
   evt.preventDefault();
   hideEl(loadMoreBtn);
@@ -38,21 +45,35 @@ function onSearchSubmit(evt) {
     searchQuery: { value: query },
   } = evt.currentTarget.elements;
 
+  if (!query.trim()) {
+    alert('Enter search query!');
+    return;
+  }
+
   fetchImages(query, page, PER_PAGE)
     .then(data => {
       page += 1;
-
-      evt.target.reset();
       currentQuery = query;
-      showEl(loadMoreBtn);
+      evt.target.reset();
       gallery.innerHTML = '';
       if (!data.total) {
-        throw new Error(
+        Notify.failure(
           'Sorry, there are no images matching your search query. Please try again.'
         );
-        return;
+        throw new Error('Error');
       }
+      Notify.success(`Hooray! We found ${data.totalHits} images.`);
+      showEl(loadMoreBtn);
       gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
+      //   const { height: cardHeight } = document
+      //     .querySelector('.gallery')
+      //     .firstElementChild.getBoundingClientRect();
+
+      //   window.scrollBy({
+      //     top: cardHeight * 2,
+      //     behavior: 'smooth',
+      //   });
+      lightbox.refresh();
     })
     .catch(err => {
       console.error(err);

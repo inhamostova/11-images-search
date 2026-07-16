@@ -1,9 +1,9 @@
 function showEl(el) {
-  el.hidden = false;
+  el.classList.remove('is-hidden');
 }
 
 function hideEl(el) {
-  el.hidden = true;
+  el.classList.add('is-hidden');
 }
 
 export { showEl, hideEl };
