@@ -24,11 +24,11 @@ loadMoreBtn.addEventListener('click', onLoadMoreBtnClick);
 function onLoadMoreBtnClick() {
   fetchImages(currentQuery, page, PER_PAGE)
     .then(data => {
-      page += 1;
       if (data.totalHits < page * PER_PAGE) {
         hideEl(loadMoreBtn);
         showEl(infoMsg);
       }
+      page += 1;
       gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
       lightbox.refresh();
     })
