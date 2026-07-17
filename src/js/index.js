@@ -4,7 +4,7 @@ import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
 import { fetchImages } from './api';
-import { showEl, hideEl } from './helpers';
+import { showEl, hideEl, smoothScrollAfterLoadImages } from './helpers';
 import { createMarkup } from './createMarkup';
 
 const searchForm = document.querySelector('.search-form');
@@ -65,14 +65,9 @@ function onSearchSubmit(evt) {
       Notify.success(`Hooray! We found ${data.totalHits} images.`);
       showEl(loadMoreBtn);
       gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
-      //   const { height: cardHeight } = document
-      //     .querySelector('.gallery')
-      //     .firstElementChild.getBoundingClientRect();
 
-      //   window.scrollBy({
-      //     top: cardHeight * 2,
-      //     behavior: 'smooth',
-      //   });
+      smoothScrollAfterLoadImages(searchForm);
+
       lightbox.refresh();
     })
     .catch(err => {

@@ -6,4 +6,13 @@ function hideEl(el) {
   el.classList.add('is-hidden');
 }
 
-export { showEl, hideEl };
+function smoothScrollAfterLoadImages(el) {
+  const { height } = el.getBoundingClientRect();
+
+  window.scrollBy({
+    top: height,
+    behavior: 'smooth',
+  });
+}
+
+export { showEl, hideEl, smoothScrollAfterLoadImages };
