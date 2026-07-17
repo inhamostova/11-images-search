@@ -34,15 +34,16 @@ const callbackObserver = (entries, observer) => {
     if (entry.isIntersecting) {
       fetchImages(currentQuery, page, PER_PAGE)
         .then(data => {
-          if (data.totalHits < page * PER_PAGE) {
+          if (data.totalHits < page * PER_PAGE && data.totalHits) {
             // hideEl(loadMoreBtn);
-            showEl(infoMsg);
             observer.unobserve(target);
+            showEl(infoMsg);
+            return;
           }
           page += 1;
           gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
           lightbox.refresh();
-          smoothScrollAfterLoadImages(gallery.firstElementChild);
+          smoothScrollAfterLoadImages(gallery.firstElementChild ?? searchForm);
         })
         .catch(err => console.error(err));
     }
@@ -104,6 +105,7 @@ function onSearchSubmit(evt) {
         Notify.failure(
           'Sorry, there are no images matching your search query. Please try again.'
         );
+
         return;
       }
       Notify.success(`Hooray! We found ${data.totalHits} images.`);
