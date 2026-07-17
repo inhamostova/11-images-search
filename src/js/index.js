@@ -30,6 +30,7 @@ function onLoadMoreBtnClick() {
       }
       page += 1;
       gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
+      smoothScrollAfterLoadImages(gallery.firstElementChild);
       lightbox.refresh();
     })
     .catch(err => console.error(err));
@@ -60,7 +61,7 @@ function onSearchSubmit(evt) {
         Notify.failure(
           'Sorry, there are no images matching your search query. Please try again.'
         );
-        throw new Error('Error');
+        return;
       }
       Notify.success(`Hooray! We found ${data.totalHits} images.`);
       showEl(loadMoreBtn);
@@ -71,7 +72,7 @@ function onSearchSubmit(evt) {
       lightbox.refresh();
     })
     .catch(err => {
-      console.error(err);
+      console.error(err.message);
       hideEl(loadMoreBtn);
     });
 }

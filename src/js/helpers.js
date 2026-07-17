@@ -8,7 +8,6 @@ function hideEl(el) {
 
 function smoothScrollAfterLoadImages(el) {
   const { height } = el.getBoundingClientRect();
-
   window.scrollBy({
     top: height,
     behavior: 'smooth',
