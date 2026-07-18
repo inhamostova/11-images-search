@@ -20,7 +20,6 @@ let currentQuery = null;
 let page = 1;
 
 searchForm.addEventListener('submit', onSearchSubmit);
-// loadMoreBtn.addEventListener('click', onLoadMoreBtnClick);
 
 const options = {
   root: null,
@@ -30,60 +29,31 @@ const options = {
 };
 
 const callbackObserver = (entries, observer) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      fetchImages(currentQuery, page, PER_PAGE)
-        .then(data => {
-          if (data.totalHits < page * PER_PAGE && data.totalHits) {
-            // hideEl(loadMoreBtn);
-            observer.unobserve(target);
-            showEl(infoMsg);
-            return;
-          }
-          page += 1;
-          gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
-          lightbox.refresh();
-          smoothScrollAfterLoadImages(gallery.firstElementChild ?? searchForm);
-        })
-        .catch(err => console.error(err));
+  entries.forEach(async entry => {
+    try {
+      if (entry.isIntersecting) {
+        const data = await fetchImages(currentQuery, page, PER_PAGE);
+        if (data.totalHits < page * PER_PAGE && data.totalHits) {
+          observer.unobserve(target);
+          showEl(infoMsg);
+          return;
+        }
+        page += 1;
+        gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
+        lightbox.refresh();
+        smoothScrollAfterLoadImages(gallery.firstElementChild ?? searchForm);
+      }
+    } catch (error) {
+      console.log(error.message);
     }
   });
-
-  // fetchImages(currentQuery, page, PER_PAGE)
-  //   .then(data => {
-  //     if (data.totalHits < page * PER_PAGE) {
-  //       hideEl(loadMoreBtn);
-  //       showEl(infoMsg);
-  //     }
-  //     page += 1;
-  //     gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
-  //     smoothScrollAfterLoadImages(gallery.firstElementChild);
-  //     lightbox.refresh();
-  //   })
-  //   .catch(err => console.error(err));
 };
 
 const observer = new IntersectionObserver(callbackObserver, options);
 
-// function onLoadMoreBtnClick() {
-//   fetchImages(currentQuery, page, PER_PAGE)
-//     .then(data => {
-//       if (data.totalHits < page * PER_PAGE) {
-//         hideEl(loadMoreBtn);
-//         showEl(infoMsg);
-//       }
-//       page += 1;
-//       gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
-//       smoothScrollAfterLoadImages(gallery.firstElementChild);
-//       lightbox.refresh();
-//     })
-//     .catch(err => console.error(err));
-// }
-
-function onSearchSubmit(evt) {
+async function onSearchSubmit(evt) {
   page = 1;
   evt.preventDefault();
-  //   hideEl(loadMoreBtn);
   hideEl(infoMsg);
 
   const {
@@ -95,30 +65,28 @@ function onSearchSubmit(evt) {
     return;
   }
 
-  fetchImages(query, page, PER_PAGE)
-    .then(data => {
-      page += 1;
-      currentQuery = query;
-      evt.target.reset();
-      gallery.innerHTML = '';
-      if (!data.total) {
-        Notify.failure(
-          'Sorry, there are no images matching your search query. Please try again.'
-        );
+  try {
+    const data = await fetchImages(query, page, PER_PAGE);
+    page += 1;
+    currentQuery = query;
+    evt.target.reset();
+    gallery.innerHTML = '';
 
-        return;
-      }
-      Notify.success(`Hooray! We found ${data.totalHits} images.`);
-      //   showEl(loadMoreBtn);
-      gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
-      observer.observe(target);
+    if (!data.total) {
+      Notify.failure(
+        'Sorry, there are no images matching your search query. Please try again.'
+      );
+      return;
+    }
+    Notify.success(`Hooray! We found ${data.totalHits} images.`);
 
-      smoothScrollAfterLoadImages(searchForm);
+    gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
+    observer.observe(target);
 
-      lightbox.refresh();
-    })
-    .catch(err => {
-      console.error(err.message);
-      //   hideEl(loadMoreBtn);
-    });
+    smoothScrollAfterLoadImages(searchForm);
+
+    lightbox.refresh();
+  } catch (error) {
+    console.log(error.message);
+  }
 }
