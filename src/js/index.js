@@ -44,7 +44,7 @@ const callbackObserver = (entries, observer) => {
         smoothScrollAfterLoadImages(gallery.firstElementChild ?? searchForm);
       }
     } catch (error) {
-      console.log(error.message);
+      Notify.failure(error.message);
     }
   });
 };
@@ -87,6 +87,6 @@ async function onSearchSubmit(evt) {
 
     lightbox.refresh();
   } catch (error) {
-    console.log(error.message);
+    Notify.failure(error.message);
   }
 }
